@@ -1,0 +1,11 @@
+id,product_name,category,price,in_stock,last_updated
+1,Laptop Pro 15,Electronics,1299.99,true,2024-01-15
+2,Office Chair,Furniture,299.50,true,2024-01-14
+3,USB-C Cable,Electronics,19.99,false,2024-01-13
+4,Standing Desk,Furniture,599.00,true,2024-01-12
+5,Wireless Mouse,Electronics,49.99,true,2024-01-11
+6,Desk Lamp,Furniture,79.95,false,2024-01-10
+7,Mechanical Keyboard,Electronics,149.99,true,2024-01-09
+8,Monitor Stand,Furniture,39.99,true,2024-01-08
+9,Webcam HD,Electronics,89.99,true,2024-01-07
+10,Ergonomic Footrest,Furniture,45.00,false,2024-01-06 
