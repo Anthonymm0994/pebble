@@ -17,8 +17,8 @@ import seaborn as sns
 # =============================================================================
 
 # Database and query settings
-DATABASE_PATH = "data.sqlite"  # Path to your SQLite database
-QUERY = "SELECT angle, radius, temperature, pressure, humidity FROM measurements"  # Your SELECT query here
+DATABASE_PATH = "sample_data.sqlite"  # Path to your SQLite database
+QUERY = "SELECT x as angle, y_positive as radius, size as temperature, color as pressure FROM correlations LIMIT 5000"  # Your SELECT query here
 
 # Plot settings
 ANGLE_COLUMN = "angle"  # Column containing angle values (degrees)
