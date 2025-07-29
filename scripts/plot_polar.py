@@ -1,115 +1,127 @@
 #!/usr/bin/env python3
 """
-Polar Plot Generator for SQLite Data
-Connects to SQLite database, runs a query, and creates a polar plot.
+Polar Plot Generator
+Creates polar plots from CSV files or SQLite databases.
 """
 
 import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import argparse
+import os
 from pathlib import Path
 
-# =============================================================================
-# CONFIGURATION - Edit these variables to customize your plot
-# =============================================================================
-
-# Database and query settings
-DATABASE_PATH = "data.sqlite"  # Path to your SQLite database
-QUERY = "SELECT angle_column, radius_column FROM table_name"  # Your SELECT query here
-
-# Plot settings
-ANGLE_COLUMN = "angle_column"  # Column containing angle values (degrees)
-RADIUS_COLUMN = "radius_column"  # Column containing radius values
-FIGURE_SIZE = (10, 8)  # Width, height in inches
-OUTPUT_FILE = "polar_output.png"  # Output filename
-
-# Styling
-TITLE = "Polar Plot"
-COLOR = "darkblue"
-MARKER_SIZE = 50
-ALPHA = 0.7  # Transparency (0-1)
-LINE_WIDTH = 2
-
-# =============================================================================
-# MAIN SCRIPT
-# =============================================================================
-
-def create_polar_plot():
-    """Create polar plot from SQLite data."""
+def load_data(data_source):
+    """Load data from CSV file or database."""
+    print(f"[DATA] Loading data from: {data_source}")
+    
     try:
-        # Connect to database
-        print(f"Connecting to database: {DATABASE_PATH}")
-        conn = sqlite3.connect(DATABASE_PATH)
+        if data_source.endswith('.csv'):
+            df = pd.read_csv(data_source)
+            print(f"[OK] Loaded CSV dataset: {len(df)} rows, {len(df.columns)} columns")
+            return df
+        else:
+            # Assume it's a database file
+            conn = sqlite3.connect(data_source)
+            # Get first table
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = cursor.fetchall()
+            if tables:
+                first_table = tables[0][0]
+                df = pd.read_sql_query(f"SELECT * FROM {first_table}", conn)
+                print(f"[INFO] Loaded table: {first_table}")
+            else:
+                raise ValueError("No tables found in database")
+            conn.close()
+            
+            print(f"[OK] Loaded dataset: {len(df)} rows, {len(df.columns)} columns")
+            return df
+            
+    except Exception as e:
+        print(f"[ERROR] Error loading data: {e}")
+        return None
+
+def create_polar_plot(data_source, angle_column=None, radius_column=None, output_file="polar_output.png"):
+    """Create polar plot from data."""
+    try:
+        # Load data
+        df = load_data(data_source)
+        if df is None:
+            return
         
-        # Execute query and load data
-        print(f"Executing query: {QUERY}")
-        df = pd.read_sql_query(QUERY, conn)
-        conn.close()
-        
-        if df.empty:
-            print("Warning: Query returned no data!")
+        # If no columns specified, use first two numeric columns
+        numeric_cols = df.select_dtypes(include=[np.number]).columns
+        if angle_column is None and len(numeric_cols) >= 2:
+            angle_column = numeric_cols[0]
+            radius_column = numeric_cols[1]
+        elif angle_column is None:
+            print("[ERROR] Need at least 2 numeric columns for polar plot")
+            print(f"[INFO] Available numeric columns: {list(numeric_cols)}")
             return
         
         # Check if columns exist
-        if ANGLE_COLUMN not in df.columns:
-            print(f"Error: Angle column '{ANGLE_COLUMN}' not found in data.")
-            print(f"Available columns: {list(df.columns)}")
+        if angle_column not in df.columns:
+            print(f"[ERROR] Column '{angle_column}' not found in data.")
+            print(f"[INFO] Available columns: {list(df.columns)}")
             return
-            
-        if RADIUS_COLUMN not in df.columns:
-            print(f"Error: Radius column '{RADIUS_COLUMN}' not found in data.")
-            print(f"Available columns: {list(df.columns)}")
+        
+        if radius_column not in df.columns:
+            print(f"[ERROR] Column '{radius_column}' not found in data.")
+            print(f"[INFO] Available columns: {list(df.columns)}")
             return
+        
+        # Create output directory
+        os.makedirs('../outputs/plot_outputs', exist_ok=True)
+        output_path = f'../outputs/plot_outputs/{output_file}'
         
         # Create the plot
-        fig, ax = plt.subplots(subplot_kw={'projection': 'polar'}, figsize=FIGURE_SIZE)
+        fig, ax = plt.subplots(subplot_kw={'projection': 'polar'}, figsize=(10, 8))
         
-        # Convert angles to radians if they're in degrees
-        angles = df[ANGLE_COLUMN]
-        if angles.max() > 2 * np.pi:  # Assume degrees if max > 2π
-            angles = np.radians(angles)
+        # Convert angles to radians if needed
+        angles = df[angle_column].values
+        radii = df[radius_column].values
         
-        radii = df[RADIUS_COLUMN]
+        # Normalize angles to 0-2π range
+        angles = np.mod(angles, 2 * np.pi)
         
         # Create polar plot
-        scatter = ax.scatter(angles, radii, c=radii, s=MARKER_SIZE, 
-                           alpha=ALPHA, cmap='viridis', edgecolors='black', linewidth=0.5)
-        
-        # Add colorbar
-        cbar = plt.colorbar(scatter, ax=ax, shrink=0.8)
-        cbar.set_label('Radius Values', rotation=270, labelpad=15)
+        ax.scatter(angles, radii, alpha=0.6, s=50, color='steelblue')
         
         # Customize plot
-        ax.set_title(TITLE, fontsize=14, fontweight='bold', pad=20)
+        ax.set_title(f"Polar Plot: {angle_column} vs {radius_column}", fontsize=14, fontweight='bold')
+        ax.set_xlabel(f"Angle ({angle_column})", fontsize=12)
+        ax.set_ylabel(f"Radius ({radius_column})", fontsize=12)
+        
+        # Add grid
         ax.grid(True, alpha=0.3)
         
-        # Set angle ticks (every 45 degrees)
-        ax.set_xticks(np.radians([0, 45, 90, 135, 180, 225, 270, 315]))
-        ax.set_xticklabels(['0°', '45°', '90°', '135°', '180°', '225°', '270°', '315°'])
-        
-        # Add statistics text
-        mean_radius = radii.mean()
-        max_radius = radii.max()
-        ax.text(0.02, 0.98, f'Mean Radius: {mean_radius:.2f}\nMax Radius: {max_radius:.2f}', 
-                transform=ax.transAxes, verticalalignment='top',
-                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+        # Add statistics
+        mean_radius = np.mean(radii)
+        ax.axhline(y=mean_radius, color='red', linestyle='--', alpha=0.7, label=f'Mean Radius: {mean_radius:.2f}')
+        ax.legend()
         
         # Save plot
         plt.tight_layout()
-        plt.savefig(OUTPUT_FILE, dpi=300, bbox_inches='tight')
-        print(f"Polar plot saved as: {OUTPUT_FILE}")
+        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        print(f"[OK] Polar plot saved as: {output_path}")
+        plt.close()
         
-        # Show plot (optional - comment out if you don't want to display)
-        plt.show()
-        
-    except sqlite3.OperationalError as e:
-        print(f"Database error: {e}")
-        print("Check that the database file exists and the query is valid.")
-    except FileNotFoundError:
-        print(f"Database file not found: {DATABASE_PATH}")
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        print(f"[ERROR] Unexpected error: {e}")
+
+def main():
+    """Main function."""
+    parser = argparse.ArgumentParser(description='Create polar plot from data')
+    parser.add_argument('data_source', help='Path to CSV file or database file')
+    parser.add_argument('--angle', help='Angle column name (default: first numeric column)')
+    parser.add_argument('--radius', help='Radius column name (default: second numeric column)')
+    parser.add_argument('--output', default='polar_output.png', help='Output filename')
+    
+    args = parser.parse_args()
+    
+    create_polar_plot(args.data_source, args.angle, args.radius, args.output)
 
 if __name__ == "__main__":
-    create_polar_plot() 
+    main() 

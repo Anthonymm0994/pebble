@@ -1,115 +1,146 @@
 #!/usr/bin/env python3
 """
-Bar Chart Generator for SQLite Data
-Connects to SQLite database, runs a query, and creates a bar chart.
+Bar Plot Generator
+Creates bar plots from CSV files or SQLite databases.
 """
 
 import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import argparse
+import os
 from pathlib import Path
 
-# =============================================================================
-# CONFIGURATION - Edit these variables to customize your plot
-# =============================================================================
-
-# Database and query settings
-DATABASE_PATH = "data.sqlite"  # Path to your SQLite database
-QUERY = "SELECT category_column, value_column FROM table_name"  # Your SELECT query here
-
-# Plot settings
-CATEGORY_COLUMN = "category_column"  # Column containing categories/labels
-VALUE_COLUMN = "value_column"  # Column containing values to plot
-FIGURE_SIZE = (12, 6)  # Width, height in inches
-OUTPUT_FILE = "bar_output.png"  # Output filename
-
-# Styling
-TITLE = "Bar Chart"
-X_LABEL = "Categories"
-Y_LABEL = "Values"
-COLOR = "skyblue"
-ALPHA = 0.8  # Transparency (0-1)
-ROTATE_LABELS = 45  # Angle to rotate x-axis labels (0 for horizontal)
-
-# =============================================================================
-# MAIN SCRIPT
-# =============================================================================
-
-def create_bar_chart():
-    """Create bar chart from SQLite data."""
+def load_data(data_source):
+    """Load data from CSV file or database."""
+    print(f"[DATA] Loading data from: {data_source}")
+    
     try:
-        # Connect to database
-        print(f"Connecting to database: {DATABASE_PATH}")
-        conn = sqlite3.connect(DATABASE_PATH)
-        
-        # Execute query and load data
-        print(f"Executing query: {QUERY}")
-        df = pd.read_sql_query(QUERY, conn)
-        conn.close()
-        
-        if df.empty:
-            print("Warning: Query returned no data!")
+        if data_source.endswith('.csv'):
+            df = pd.read_csv(data_source)
+            print(f"[OK] Loaded CSV dataset: {len(df)} rows, {len(df.columns)} columns")
+            return df
+        else:
+            # Assume it's a database file
+            conn = sqlite3.connect(data_source)
+            # Get first table
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = cursor.fetchall()
+            if tables:
+                first_table = tables[0][0]
+                df = pd.read_sql_query(f"SELECT * FROM {first_table}", conn)
+                print(f"[INFO] Loaded table: {first_table}")
+            else:
+                raise ValueError("No tables found in database")
+            conn.close()
+            
+            print(f"[OK] Loaded dataset: {len(df)} rows, {len(df.columns)} columns")
+            return df
+            
+    except Exception as e:
+        print(f"[ERROR] Error loading data: {e}")
+        return None
+
+def create_bar_plot(data_source, category_column=None, value_column=None, output_file="bar_output.png"):
+    """Create bar plot from data."""
+    try:
+        # Load data
+        df = load_data(data_source)
+        if df is None:
             return
+        
+        # If no columns specified, try to find suitable columns
+        if category_column is None:
+            # Look for categorical columns
+            categorical_cols = df.select_dtypes(include=['object']).columns
+            if len(categorical_cols) > 0:
+                category_column = categorical_cols[0]
+            else:
+                print("[ERROR] No categorical columns found for bar plot")
+                print(f"[INFO] Available columns: {list(df.columns)}")
+                return
+        
+        if value_column is None:
+            # Look for numeric columns
+            numeric_cols = df.select_dtypes(include=[np.number]).columns
+            if len(numeric_cols) > 0:
+                value_column = numeric_cols[0]
+            else:
+                print("[ERROR] No numeric columns found for bar plot")
+                print(f"[INFO] Available columns: {list(df.columns)}")
+                return
         
         # Check if columns exist
-        if CATEGORY_COLUMN not in df.columns:
-            print(f"Error: Category column '{CATEGORY_COLUMN}' not found in data.")
-            print(f"Available columns: {list(df.columns)}")
+        if category_column not in df.columns:
+            print(f"[ERROR] Column '{category_column}' not found in data.")
+            print(f"[INFO] Available columns: {list(df.columns)}")
             return
-            
-        if VALUE_COLUMN not in df.columns:
-            print(f"Error: Value column '{VALUE_COLUMN}' not found in data.")
-            print(f"Available columns: {list(df.columns)}")
+        
+        if value_column not in df.columns:
+            print(f"[ERROR] Column '{value_column}' not found in data.")
+            print(f"[INFO] Available columns: {list(df.columns)}")
             return
+        
+        # Create output directory
+        os.makedirs('../outputs/plot_outputs', exist_ok=True)
+        output_path = f'../outputs/plot_outputs/{output_file}'
+        
+        # Aggregate data by category
+        grouped_data = df.groupby(category_column)[value_column].agg(['mean', 'count']).reset_index()
         
         # Create the plot
-        plt.figure(figsize=FIGURE_SIZE)
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
         
-        # Create bar chart
-        bars = plt.bar(df[CATEGORY_COLUMN], df[VALUE_COLUMN], 
-                      color=COLOR, alpha=ALPHA, edgecolor='black', linewidth=0.5)
+        # Mean values bar plot
+        bars1 = ax1.bar(range(len(grouped_data)), grouped_data['mean'], color='steelblue', alpha=0.7)
+        ax1.set_title(f"Mean {value_column} by {category_column}", fontsize=14, fontweight='bold')
+        ax1.set_xlabel(category_column, fontsize=12)
+        ax1.set_ylabel(f"Mean {value_column}", fontsize=12)
+        ax1.set_xticks(range(len(grouped_data)))
+        ax1.set_xticklabels(grouped_data[category_column], rotation=45, ha='right')
+        ax1.grid(True, alpha=0.3)
         
-        # Customize plot
-        plt.title(TITLE, fontsize=14, fontweight='bold')
-        plt.xlabel(X_LABEL, fontsize=12)
-        plt.ylabel(Y_LABEL, fontsize=12)
-        plt.grid(True, alpha=0.3, axis='y')
+        # Add value labels on bars
+        for bar, mean_val in zip(bars1, grouped_data['mean']):
+            ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01*max(grouped_data['mean']),
+                    f'{mean_val:.2f}', ha='center', va='bottom', fontweight='bold')
         
-        # Rotate x-axis labels if needed
-        if ROTATE_LABELS > 0:
-            plt.xticks(rotation=ROTATE_LABELS, ha='right')
+        # Count bar plot
+        bars2 = ax2.bar(range(len(grouped_data)), grouped_data['count'], color='orange', alpha=0.7)
+        ax2.set_title(f"Count by {category_column}", fontsize=14, fontweight='bold')
+        ax2.set_xlabel(category_column, fontsize=12)
+        ax2.set_ylabel("Count", fontsize=12)
+        ax2.set_xticks(range(len(grouped_data)))
+        ax2.set_xticklabels(grouped_data[category_column], rotation=45, ha='right')
+        ax2.grid(True, alpha=0.3)
         
-        # Add value labels on top of bars
-        for bar in bars:
-            height = bar.get_height()
-            plt.text(bar.get_x() + bar.get_width()/2., height + height*0.01,
-                    f'{height:.1f}', ha='center', va='bottom', fontsize=10)
-        
-        # Add statistics text
-        total_value = df[VALUE_COLUMN].sum()
-        max_value = df[VALUE_COLUMN].max()
-        plt.text(0.02, 0.98, f'Total: {total_value:.2f}\nMax: {max_value:.2f}', 
-                transform=plt.gca().transAxes, verticalalignment='top',
-                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
-        
-        # Adjust layout to prevent label cutoff
-        plt.tight_layout()
+        # Add value labels on bars
+        for bar, count_val in zip(bars2, grouped_data['count']):
+            ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01*max(grouped_data['count']),
+                    f'{count_val}', ha='center', va='bottom', fontweight='bold')
         
         # Save plot
-        plt.savefig(OUTPUT_FILE, dpi=300, bbox_inches='tight')
-        print(f"Bar chart saved as: {OUTPUT_FILE}")
+        plt.tight_layout()
+        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        print(f"[OK] Bar plot saved as: {output_path}")
+        plt.close()
         
-        # Show plot (optional - comment out if you don't want to display)
-        plt.show()
-        
-    except sqlite3.OperationalError as e:
-        print(f"Database error: {e}")
-        print("Check that the database file exists and the query is valid.")
-    except FileNotFoundError:
-        print(f"Database file not found: {DATABASE_PATH}")
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        print(f"[ERROR] Unexpected error: {e}")
+
+def main():
+    """Main function."""
+    parser = argparse.ArgumentParser(description='Create bar plot from data')
+    parser.add_argument('data_source', help='Path to CSV file or database file')
+    parser.add_argument('--category', help='Category column name (default: first categorical column)')
+    parser.add_argument('--value', help='Value column name (default: first numeric column)')
+    parser.add_argument('--output', default='bar_output.png', help='Output filename')
+    
+    args = parser.parse_args()
+    
+    create_bar_plot(args.data_source, args.category, args.value, args.output)
 
 if __name__ == "__main__":
-    create_bar_chart() 
+    main() 

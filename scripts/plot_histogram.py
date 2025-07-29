@@ -1,97 +1,116 @@
 #!/usr/bin/env python3
 """
-Histogram Plot Generator for SQLite Data
-Connects to SQLite database, runs a query, and creates a histogram plot.
+Histogram Plot Generator
+Creates histogram plots from CSV files or SQLite databases.
 """
 
 import sqlite3
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import argparse
+import os
 from pathlib import Path
 
-# =============================================================================
-# CONFIGURATION - Edit these variables to customize your plot
-# =============================================================================
-
-# Database and query settings
-DATABASE_PATH = "data.sqlite"  # Path to your SQLite database
-QUERY = "SELECT column_name FROM table_name"  # Your SELECT query here
-
-# Plot settings
-COLUMN_NAME = "column_name"  # Column to plot (should match your query)
-BIN_COUNT = 20  # Number of bins for histogram
-FIGURE_SIZE = (10, 6)  # Width, height in inches
-OUTPUT_FILE = "histogram_output.png"  # Output filename
-
-# Styling
-TITLE = "Histogram of Data"
-X_LABEL = "Values"
-Y_LABEL = "Frequency"
-COLOR = "steelblue"
-ALPHA = 0.7  # Transparency (0-1)
-
-# =============================================================================
-# MAIN SCRIPT
-# =============================================================================
-
-def create_histogram():
-    """Create histogram plot from SQLite data."""
+def load_data(data_source):
+    """Load data from CSV file or database."""
+    print(f"[DATA] Loading data from: {data_source}")
+    
     try:
-        # Connect to database
-        print(f"Connecting to database: {DATABASE_PATH}")
-        conn = sqlite3.connect(DATABASE_PATH)
-        
-        # Execute query and load data
-        print(f"Executing query: {QUERY}")
-        df = pd.read_sql_query(QUERY, conn)
-        conn.close()
-        
-        if df.empty:
-            print("Warning: Query returned no data!")
+        if data_source.endswith('.csv'):
+            df = pd.read_csv(data_source)
+            print(f"[OK] Loaded CSV dataset: {len(df)} rows, {len(df.columns)} columns")
+            return df
+        else:
+            # Assume it's a database file
+            conn = sqlite3.connect(data_source)
+            # Get first table
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = cursor.fetchall()
+            if tables:
+                first_table = tables[0][0]
+                df = pd.read_sql_query(f"SELECT * FROM {first_table}", conn)
+                print(f"[INFO] Loaded table: {first_table}")
+            else:
+                raise ValueError("No tables found in database")
+            conn.close()
+            
+            print(f"[OK] Loaded dataset: {len(df)} rows, {len(df.columns)} columns")
+            return df
+            
+    except Exception as e:
+        print(f"[ERROR] Error loading data: {e}")
+        return None
+
+def create_histogram(data_source, column_name=None, bin_count=20, output_file="histogram_output.png"):
+    """Create histogram plot from data."""
+    try:
+        # Load data
+        df = load_data(data_source)
+        if df is None:
             return
+        
+        # If no column specified, use first numeric column
+        if column_name is None:
+            numeric_cols = df.select_dtypes(include=[np.number]).columns
+            if len(numeric_cols) > 0:
+                column_name = numeric_cols[0]
+            else:
+                print("[ERROR] No numeric columns found for histogram")
+                return
         
         # Check if column exists
-        if COLUMN_NAME not in df.columns:
-            print(f"Error: Column '{COLUMN_NAME}' not found in data.")
-            print(f"Available columns: {list(df.columns)}")
+        if column_name not in df.columns:
+            print(f"[ERROR] Column '{column_name}' not found in data.")
+            print(f"[INFO] Available columns: {list(df.columns)}")
             return
         
+        # Create output directory
+        os.makedirs('../outputs/plot_outputs', exist_ok=True)
+        output_path = f'../outputs/plot_outputs/{output_file}'
+        
         # Create the plot
-        plt.figure(figsize=FIGURE_SIZE)
+        plt.figure(figsize=(10, 6))
         
         # Create histogram
-        plt.hist(df[COLUMN_NAME], bins=BIN_COUNT, color=COLOR, alpha=ALPHA, 
+        plt.hist(df[column_name].dropna(), bins=bin_count, color='steelblue', alpha=0.7, 
                 edgecolor='black', linewidth=0.5)
         
         # Customize plot
-        plt.title(TITLE, fontsize=14, fontweight='bold')
-        plt.xlabel(X_LABEL, fontsize=12)
-        plt.ylabel(Y_LABEL, fontsize=12)
+        plt.title(f"Histogram of {column_name}", fontsize=14, fontweight='bold')
+        plt.xlabel(column_name, fontsize=12)
+        plt.ylabel("Frequency", fontsize=12)
         plt.grid(True, alpha=0.3)
         
         # Add statistics text
-        mean_val = df[COLUMN_NAME].mean()
-        std_val = df[COLUMN_NAME].std()
-        plt.text(0.02, 0.98, f'Mean: {mean_val:.2f}\nStd: {std_val:.2f}', 
+        data = df[column_name].dropna()
+        mean_val = data.mean()
+        std_val = data.std()
+        plt.text(0.02, 0.98, f'Mean: {mean_val:.2f}\nStd: {std_val:.2f}\nCount: {len(data)}', 
                 transform=plt.gca().transAxes, verticalalignment='top',
                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
         
         # Save plot
         plt.tight_layout()
-        plt.savefig(OUTPUT_FILE, dpi=300, bbox_inches='tight')
-        print(f"Histogram saved as: {OUTPUT_FILE}")
+        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        print(f"[OK] Histogram saved as: {output_path}")
+        plt.close()
         
-        # Show plot (optional - comment out if you don't want to display)
-        plt.show()
-        
-    except sqlite3.OperationalError as e:
-        print(f"Database error: {e}")
-        print("Check that the database file exists and the query is valid.")
-    except FileNotFoundError:
-        print(f"Database file not found: {DATABASE_PATH}")
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        print(f"[ERROR] Unexpected error: {e}")
+
+def main():
+    """Main function."""
+    parser = argparse.ArgumentParser(description='Create histogram plot from data')
+    parser.add_argument('data_source', help='Path to CSV file or database file')
+    parser.add_argument('--column', help='Column name to plot (default: first numeric column)')
+    parser.add_argument('--bins', type=int, default=20, help='Number of bins (default: 20)')
+    parser.add_argument('--output', default='histogram_output.png', help='Output filename')
+    
+    args = parser.parse_args()
+    
+    create_histogram(args.data_source, args.column, args.bins, args.output)
 
 if __name__ == "__main__":
-    create_histogram() 
+    main() 
