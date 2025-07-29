@@ -2,7 +2,7 @@
 DATA QUALITY ASSESSMENT REPORT
 ================================================================================
 Dataset: sample_data.csv
-Generated: 2025-07-29 12:04:07
+Generated: 2025-07-29 12:06:50
 Shape: 10 rows × 6 columns
 
 OVERALL QUALITY ASSESSMENT:

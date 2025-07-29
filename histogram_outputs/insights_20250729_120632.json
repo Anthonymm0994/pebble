@@ -1,0 +1,20 @@
+{
+  "id": [
+    "Consistent mean values across filters (CV: 0.07)",
+    "Consistent standard deviation across filters (CV: 0.14)",
+    "Consistent outlier patterns across filters (0.0% to 0.0%)",
+    "Consistent sample sizes across filters (3 to 6 records)"
+  ],
+  "price": [
+    "High variation in mean values across filters (CV: 0.19)",
+    "Consistent standard deviation across filters (CV: 0.15)",
+    "Significant variation in outlier percentage across filters (0.0% to 20.0%)",
+    "Consistent sample sizes across filters (3 to 6 records)"
+  ],
+  "in_stock": [
+    "Consistent mean values across filters (CV: 0.10)",
+    "High variation in standard deviation across filters (CV: 0.71)",
+    "Significant variation in outlier percentage across filters (0.0% to 20.0%)",
+    "Consistent sample sizes across filters (3 to 6 records)"
+  ]
+}

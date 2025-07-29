@@ -1,0 +1,39 @@
+================================================================================
+DATA PROFILE REPORT
+================================================================================
+Dataset: sample_data.csv
+Generated: 2025-07-29 12:06:41
+Shape: 10 rows × 6 columns
+
+DATA TYPES
+----------
+numeric_columns: 3 columns
+categorical_columns: 1 columns
+text_columns: 2 columns
+
+MISSING DATA
+------------
+Total missing: 0 cells (0.0%)
+
+NUMERIC ANALYSIS
+----------------
+Numeric column statistics:
+  id:
+    Mean: 5.50
+    Std: 3.03
+    Outliers: 0 (0.0%)
+  price:
+    Mean: 267.34
+    Std: 403.77
+    Outliers: 2 (20.0%)
+
+CATEGORICAL ANALYSIS
+--------------------
+
+PATTERNS
+--------
+Duplicate rows: 0 (0.0%)
+Potential primary keys: ['id', 'product_name', 'price', 'last_updated']
+
+CORRELATIONS
+------------
