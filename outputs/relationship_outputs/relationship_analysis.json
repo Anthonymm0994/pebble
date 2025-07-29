@@ -20,10 +20,10 @@
   },
   "column_analysis": {
     "exact_matches": [
-      "category",
       "product_name",
+      "id",
       "price",
-      "id"
+      "category"
     ],
     "similar_names": [],
     "similar_data_types": [
@@ -105,16 +105,16 @@
       {
         "column": "product_name",
         "filtered_values": [
-          "Laptop Pro 15",
-          "Webcam HD",
-          "USB-C Cable",
           "Monitor Stand",
-          "Standing Desk",
-          "Office Chair",
-          "Desk Lamp",
+          "Ergonomic Footrest",
+          "Webcam HD",
           "Wireless Mouse",
           "Mechanical Keyboard",
-          "Ergonomic Footrest"
+          "Laptop Pro 15",
+          "Desk Lamp",
+          "Standing Desk",
+          "USB-C Cable",
+          "Office Chair"
         ],
         "filter_type": "exclusion"
       },

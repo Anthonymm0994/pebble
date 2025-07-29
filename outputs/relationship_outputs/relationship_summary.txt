@@ -12,10 +12,10 @@ Key Findings:
   - Suggested joins: 1
 
 Exact Column Matches:
-  - category
   - product_name
-  - price
   - id
+  - price
+  - category
 
 Join Recommendations:
   - Use exact value joins for high-confidence relationships
