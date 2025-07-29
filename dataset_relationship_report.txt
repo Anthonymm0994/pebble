@@ -1,0 +1,41 @@
+====================================================================================================
+DATASET RELATIONSHIP ANALYSIS REPORT
+====================================================================================================
+
+[SUMMARY] EXECUTIVE SUMMARY
+--------------------------------------------------
+Source Dataset: 200 rows, 9 columns
+Derived Dataset: 45 rows, 9 columns
+Row Count Ratio: 0.225
+
+[TIME] TIMESTAMP ANALYSIS
+--------------------------------------------------
+message_time -> processed_time:
+  - Mean delay: 1687.20s
+  - Match count: 4576
+  - Confidence: 1.000
+
+[SEARCH] COLUMN SIMILARITIES
+--------------------------------------------------
+Exact matches: 2
+Similar columns: 6
+Value overlaps: 2
+New columns: 7
+Dropped columns: 7
+
+[TRANSFORM] DETECTED TRANSFORMATIONS
+--------------------------------------------------
+[OK] FILTERING DETECTED: 22.5% of source rows retained
+[OK] AGGREGATION DETECTED: 4 columns aggregated
+[OK] MATHEMATICAL TRANSFORMATIONS: 4 detected
+[OK] CATEGORICAL TRANSFORMATIONS: 1 detected
+
+[JOIN] JOIN SUGGESTIONS
+--------------------------------------------------
+1. TIMESTAMP_JOIN:
+   Source: message_time
+   Derived: processed_time
+   Confidence: 1.000
+   Details: {'mean_delay': 1687.204326923077, 'join_condition': 'ABS(message_time - processed_time) <= 3600'}
+
+====================================================================================================
