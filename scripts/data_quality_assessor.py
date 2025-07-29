@@ -599,7 +599,7 @@ class DataQualityAssessor:
         print(f"\n[CHART] Creating quality visualizations...")
         
         # Create output directory
-        os.makedirs('quality_outputs', exist_ok=True)
+        os.makedirs('../outputs/quality_outputs', exist_ok=True)
         
         # 1. Quality Score Dashboard
         self._create_quality_dashboard()
@@ -610,7 +610,7 @@ class DataQualityAssessor:
         # 3. Quality Issues
         self._create_quality_issues()
         
-        print(f"[OK] All quality visualizations saved in 'quality_outputs/' directory")
+        print(f"[OK] All quality visualizations saved in '../outputs/quality_outputs/' directory")
     
     def _create_quality_dashboard(self):
         """Create quality dashboard."""
@@ -664,7 +664,7 @@ class DataQualityAssessor:
         axes[1, 1].axis('off')
         
         plt.tight_layout()
-        plt.savefig('quality_outputs/quality_dashboard.png', dpi=300, bbox_inches='tight')
+        plt.savefig('../outputs/quality_outputs/quality_dashboard.png', dpi=300, bbox_inches='tight')
         plt.close()
     
     def _create_component_analysis(self):
@@ -736,7 +736,7 @@ class DataQualityAssessor:
             axes[1, 2].tick_params(axis='x', rotation=45)
         
         plt.tight_layout()
-        plt.savefig('quality_outputs/component_analysis.png', dpi=300, bbox_inches='tight')
+        plt.savefig('../outputs/quality_outputs/component_analysis.png', dpi=300, bbox_inches='tight')
         plt.close()
     
     def _create_quality_issues(self):
@@ -787,7 +787,7 @@ class DataQualityAssessor:
             axes[1, 1].set_title('Quality Score Breakdown')
         
         plt.tight_layout()
-        plt.savefig('quality_outputs/quality_issues.png', dpi=300, bbox_inches='tight')
+        plt.savefig('../outputs/quality_outputs/quality_issues.png', dpi=300, bbox_inches='tight')
         plt.close()
     
     def generate_quality_report(self, output_format: str = 'html') -> str:
@@ -873,10 +873,10 @@ class DataQualityAssessor:
         """
         
         # Save HTML file
-        with open('quality_outputs/quality_assessment_report.html', 'w') as f:
+        with open('../outputs/quality_outputs/quality_assessment_report.html', 'w') as f:
             f.write(html_content)
         
-        print(f"[OK] HTML quality report saved as 'quality_outputs/quality_assessment_report.html'")
+        print(f"[OK] HTML quality report saved as '../outputs/quality_outputs/quality_assessment_report.html'")
         return html_content
     
     def _generate_json_quality_report(self) -> str:
@@ -893,10 +893,10 @@ class DataQualityAssessor:
         json_content = json.dumps(report, indent=2, default=str)
         
         # Save JSON file
-        with open('quality_outputs/quality_assessment_report.json', 'w') as f:
+        with open('../outputs/quality_outputs/quality_assessment_report.json', 'w') as f:
             f.write(json_content)
         
-        print(f"[OK] JSON quality report saved as 'quality_outputs/quality_assessment_report.json'")
+        print(f"[OK] JSON quality report saved as '../outputs/quality_outputs/quality_assessment_report.json'")
         return json_content
     
     def _generate_text_quality_report(self) -> str:
@@ -936,10 +936,10 @@ class DataQualityAssessor:
         report_text = "\n".join(report_lines)
         
         # Save text file
-        with open('quality_outputs/quality_assessment_report.txt', 'w') as f:
+        with open('../outputs/quality_outputs/quality_assessment_report.txt', 'w') as f:
             f.write(report_text)
         
-        print(f"[OK] Text quality report saved as 'quality_outputs/quality_assessment_report.txt'")
+        print(f"[OK] Text quality report saved as '../outputs/quality_outputs/quality_assessment_report.txt'")
         return report_text
     
     def run_comprehensive_quality_assessment(self, table_name: str = None, output_format: str = 'html'):
@@ -969,7 +969,7 @@ class DataQualityAssessor:
         self.generate_quality_report(output_format)
         
         print(f"\n[OK] Comprehensive quality assessment complete!")
-        print(f"[DATA] Check 'quality_outputs/' directory for results")
+        print(f"[DATA] Check '../outputs/quality_outputs/' directory for results")
     
     def close(self):
         """Clean up resources."""

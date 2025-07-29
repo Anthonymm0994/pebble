@@ -1,0 +1,17 @@
+================================================================================
+DATA EXPLORATION REPORT
+================================================================================
+Dataset: ../sample_data.csv
+Generated: 2025-07-29 12:14:54
+Shape: 10 rows × 6 columns
+
+KEY INSIGHTS:
+--------------------
+• [OK] Excellent data quality: No missing values detected
+• [CORRELATION] id: Data appears to follow normal distribution
+• [ANOMALY] price: 20.0% outliers detected - consider investigation
+• [TREND] price: Distribution is right-skewed (skewness: 2.27)
+• [CORRELATION] price: Data does not follow normal distribution
+• [KEY] product_name: High uniqueness (100.0%) - potential identifier
+• [KEY] last_updated: High uniqueness (100.0%) - potential identifier
+• [WARNING]  2 outliers detected across numeric columns

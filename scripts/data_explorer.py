@@ -429,7 +429,7 @@ class DataExplorer:
         print(f"\n[CHART] Creating comprehensive visualizations...")
         
         # Create output directory
-        os.makedirs('explorer_outputs', exist_ok=True)
+        os.makedirs('../outputs/explorer_outputs', exist_ok=True)
         
         # 1. Data Overview
         self._create_data_overview()
@@ -449,7 +449,7 @@ class DataExplorer:
         # 6. Distribution Analysis
         self._create_distribution_analysis()
         
-        print(f"[OK] All visualizations saved in 'explorer_outputs/' directory")
+        print(f"[OK] All visualizations saved in '../outputs/explorer_outputs/' directory")
     
     def _create_data_overview(self):
         """Create data overview visualization."""
@@ -497,7 +497,7 @@ class DataExplorer:
         axes[1, 1].axis('off')
         
         plt.tight_layout()
-        plt.savefig('explorer_outputs/data_overview.png', dpi=300, bbox_inches='tight')
+        plt.savefig('../outputs/explorer_outputs/data_overview.png', dpi=300, bbox_inches='tight')
         plt.close()
     
     def _create_numeric_analysis(self):
@@ -542,7 +542,7 @@ class DataExplorer:
                 axes[row, col_idx].axis('off')
             
             plt.tight_layout()
-            plt.savefig('explorer_outputs/numeric_analysis.png', dpi=300, bbox_inches='tight')
+            plt.savefig('../outputs/explorer_outputs/numeric_analysis.png', dpi=300, bbox_inches='tight')
             plt.close()
     
     def _create_categorical_analysis(self):
@@ -582,7 +582,7 @@ class DataExplorer:
                 axes[row, col_idx].axis('off')
             
             plt.tight_layout()
-            plt.savefig('explorer_outputs/categorical_analysis.png', dpi=300, bbox_inches='tight')
+            plt.savefig('../outputs/explorer_outputs/categorical_analysis.png', dpi=300, bbox_inches='tight')
             plt.close()
     
     def _create_correlation_analysis(self):
@@ -616,7 +616,7 @@ class DataExplorer:
                     axes[1].set_title('High Correlations')
                 
                 plt.tight_layout()
-                plt.savefig('explorer_outputs/correlation_analysis.png', dpi=300, bbox_inches='tight')
+                plt.savefig('../outputs/explorer_outputs/correlation_analysis.png', dpi=300, bbox_inches='tight')
                 plt.close()
     
     def _create_anomaly_analysis(self):
@@ -680,7 +680,7 @@ class DataExplorer:
                 axes[1, 1].set_title('Data Inconsistencies')
             
             plt.tight_layout()
-            plt.savefig('explorer_outputs/anomaly_analysis.png', dpi=300, bbox_inches='tight')
+            plt.savefig('../outputs/explorer_outputs/anomaly_analysis.png', dpi=300, bbox_inches='tight')
             plt.close()
     
     def _create_distribution_analysis(self):
@@ -715,7 +715,7 @@ class DataExplorer:
                 axes[row, col_idx].axis('off')
             
             plt.tight_layout()
-            plt.savefig('explorer_outputs/distribution_analysis.png', dpi=300, bbox_inches='tight')
+            plt.savefig('../outputs/explorer_outputs/distribution_analysis.png', dpi=300, bbox_inches='tight')
             plt.close()
     
     def generate_report(self, output_format: str = 'html') -> str:
@@ -772,10 +772,10 @@ class DataExplorer:
         """
         
         # Save HTML file
-        with open('explorer_outputs/data_exploration_report.html', 'w') as f:
+        with open('../outputs/explorer_outputs/data_exploration_report.html', 'w') as f:
             f.write(html_content)
         
-        print(f"[OK] HTML report saved as 'explorer_outputs/data_exploration_report.html'")
+        print(f"[OK] HTML report saved as '../outputs/explorer_outputs/data_exploration_report.html'")
         return html_content
     
     def _generate_json_report(self) -> str:
@@ -792,10 +792,10 @@ class DataExplorer:
         json_content = json.dumps(report, indent=2, default=str)
         
         # Save JSON file
-        with open('explorer_outputs/data_exploration_report.json', 'w') as f:
+        with open('../outputs/explorer_outputs/data_exploration_report.json', 'w') as f:
             f.write(json_content)
         
-        print(f"[OK] JSON report saved as 'explorer_outputs/data_exploration_report.json'")
+        print(f"[OK] JSON report saved as '../outputs/explorer_outputs/data_exploration_report.json'")
         return json_content
     
     def _generate_text_report(self) -> str:
@@ -819,10 +819,10 @@ class DataExplorer:
         report_text = "\n".join(report_lines)
         
         # Save text file
-        with open('explorer_outputs/data_exploration_report.txt', 'w') as f:
+        with open('../outputs/explorer_outputs/data_exploration_report.txt', 'w') as f:
             f.write(report_text)
         
-        print(f"[OK] Text report saved as 'explorer_outputs/data_exploration_report.txt'")
+        print(f"[OK] Text report saved as '../outputs/explorer_outputs/data_exploration_report.txt'")
         return report_text
     
     def run_comprehensive_exploration(self, table_name: str = None, output_format: str = 'html'):
@@ -847,7 +847,7 @@ class DataExplorer:
         self.generate_report(output_format)
         
         print(f"\n[OK] Comprehensive exploration complete!")
-        print(f"[DATA] Check 'explorer_outputs/' directory for results")
+        print(f"[DATA] Check '../outputs/explorer_outputs/' directory for results")
     
     def close(self):
         """Clean up resources."""

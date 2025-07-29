@@ -374,10 +374,10 @@ class BusinessIntelligenceReporter:
         summary_text = "\n".join(summary)
         
         # Save summary
-        with open('bi_outputs/executive_summary.txt', 'w') as f:
+        with open('../outputs/bi_outputs/executive_summary.txt', 'w') as f:
             f.write(summary_text)
         
-        print(f"[OK] Executive summary saved as 'bi_outputs/executive_summary.txt'")
+        print(f"[OK] Executive summary saved as '../outputs/bi_outputs/executive_summary.txt'")
         return summary_text
     
     def create_visualizations(self):
@@ -385,7 +385,7 @@ class BusinessIntelligenceReporter:
         print(f"\n[CHART] Creating visualizations...")
         
         # Create output directory
-        os.makedirs('bi_outputs', exist_ok=True)
+        os.makedirs('../outputs/bi_outputs', exist_ok=True)
         
         # 1. KPI Dashboard
         self._create_kpi_dashboard()
@@ -402,7 +402,7 @@ class BusinessIntelligenceReporter:
         # 5. Forecast Charts
         self._create_forecast_charts()
         
-        print(f"[OK] All visualizations saved in 'bi_outputs/' directory")
+        print(f"[OK] All visualizations saved in '../outputs/bi_outputs/' directory")
     
     def _create_kpi_dashboard(self):
         """Create KPI dashboard."""
@@ -440,7 +440,7 @@ class BusinessIntelligenceReporter:
         axes[1, 1].set_ylabel('Percentage')
         
         plt.tight_layout()
-        plt.savefig('bi_outputs/kpi_dashboard.png', dpi=300, bbox_inches='tight')
+        plt.savefig('../outputs/bi_outputs/kpi_dashboard.png', dpi=300, bbox_inches='tight')
         plt.close()
     
     def _create_trend_analysis(self):
@@ -465,7 +465,7 @@ class BusinessIntelligenceReporter:
                     axes[row, col_idx].legend()
             
             plt.tight_layout()
-            plt.savefig('bi_outputs/trend_analysis.png', dpi=300, bbox_inches='tight')
+            plt.savefig('../outputs/bi_outputs/trend_analysis.png', dpi=300, bbox_inches='tight')
             plt.close()
     
     def _create_performance_metrics(self):
@@ -492,7 +492,7 @@ class BusinessIntelligenceReporter:
                     axes[row, col_idx].set_ylabel('Frequency')
             
             plt.tight_layout()
-            plt.savefig('bi_outputs/performance_metrics.png', dpi=300, bbox_inches='tight')
+            plt.savefig('../outputs/bi_outputs/performance_metrics.png', dpi=300, bbox_inches='tight')
             plt.close()
     
     def _create_comparative_analysis(self):
@@ -525,7 +525,7 @@ class BusinessIntelligenceReporter:
                     axes[row, col_idx].tick_params(axis='x', rotation=45)
             
             plt.tight_layout()
-            plt.savefig('bi_outputs/comparative_analysis.png', dpi=300, bbox_inches='tight')
+            plt.savefig('../outputs/bi_outputs/comparative_analysis.png', dpi=300, bbox_inches='tight')
             plt.close()
     
     def _create_forecast_charts(self):
@@ -555,7 +555,7 @@ class BusinessIntelligenceReporter:
                 axes[i].legend()
             
             plt.tight_layout()
-            plt.savefig('bi_outputs/forecast_analysis.png', dpi=300, bbox_inches='tight')
+            plt.savefig('../outputs/bi_outputs/forecast_analysis.png', dpi=300, bbox_inches='tight')
             plt.close()
     
     def generate_comprehensive_report(self, table_name: str = None):
@@ -579,7 +579,7 @@ class BusinessIntelligenceReporter:
         self.create_executive_summary()
         
         print(f"\n[OK] Comprehensive BI report complete!")
-        print(f"[DATA] Check 'bi_outputs/' directory for results")
+        print(f"[DATA] Check '../outputs/bi_outputs/' directory for results")
     
     def close(self):
         """Clean up resources."""

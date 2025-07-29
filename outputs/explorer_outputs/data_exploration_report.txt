@@ -1,8 +1,8 @@
 ================================================================================
 DATA EXPLORATION REPORT
 ================================================================================
-Dataset: sample_data.csv
-Generated: 2025-07-29 12:06:47
+Dataset: ../sample_data.csv
+Generated: 2025-07-29 12:17:11
 Shape: 10 rows × 6 columns
 
 KEY INSIGHTS:

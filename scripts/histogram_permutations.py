@@ -32,6 +32,10 @@ import json
 # Suppress warnings for cleaner output
 warnings.filterwarnings('ignore')
 
+# Set professional plotting style
+plt.style.use('default')
+sns.set_palette("husl")
+
 class HistogramPermutationsGenerator:
     """
     Generate histogram permutations based on SQL queries with WHERE clause variations.
@@ -303,7 +307,7 @@ class HistogramPermutationsGenerator:
         print(f"\n[CHART] Creating comparative histograms for: {column}")
         
         # Create output directory
-        os.makedirs('histogram_outputs', exist_ok=True)
+        os.makedirs('../outputs/histogram_outputs', exist_ok=True)
         
         # Determine consistent axis limits
         all_data = []
@@ -327,8 +331,8 @@ class HistogramPermutationsGenerator:
         cols_per_row = 3
         rows = (n_variations + cols_per_row - 1) // cols_per_row
         
-        fig, axes = plt.subplots(rows, cols_per_row, figsize=(15, 5 * rows))
-        fig.suptitle(f'Histogram Permutations: {column}', fontsize=16, fontweight='bold')
+        fig, axes = plt.subplots(rows, cols_per_row, figsize=(18, 6 * rows))
+        fig.suptitle(f'Histogram Permutations Analysis: {column}', fontsize=16, fontweight='bold')
         
         if rows == 1:
             axes = axes.reshape(1, -1)
@@ -346,20 +350,40 @@ class HistogramPermutationsGenerator:
             bins = np.linspace(global_min - global_range * 0.05, 
                               global_max + global_range * 0.05, 30)
             
-            axes[row, col_idx].hist(data, bins=bins, alpha=0.7, color='blue', edgecolor='black')
-            axes[row, col_idx].set_title(f'{description}\n(n={stats["count"]})', fontsize=10)
-            axes[row, col_idx].set_xlabel(column)
-            axes[row, col_idx].set_ylabel('Frequency')
+            # Create histogram with improved styling
+            n, bins, patches = axes[row, col_idx].hist(data, bins=bins, alpha=0.7, 
+                                                      color='steelblue', edgecolor='black', linewidth=0.5)
             
-            # Add statistics text
+            # Add mean line
+            mean_val = stats["mean"]
+            axes[row, col_idx].axvline(mean_val, color='red', linestyle='--', linewidth=2, 
+                                      label=f'Mean: {mean_val:.2f}')
+            
+            # Add median line
+            median_val = stats["median"]
+            axes[row, col_idx].axvline(median_val, color='orange', linestyle='-', linewidth=2, 
+                                      label=f'Median: {median_val:.2f}')
+            
+            # Set title and labels
+            axes[row, col_idx].set_title(f'{description}\n(n={stats["count"]})', fontsize=12, fontweight='bold')
+            axes[row, col_idx].set_xlabel(f'{column} Values', fontsize=10, fontweight='bold')
+            axes[row, col_idx].set_ylabel('Frequency', fontsize=10, fontweight='bold')
+            
+            # Add legend
+            axes[row, col_idx].legend(loc='upper right', fontsize=8)
+            
+            # Add statistics text box
             stats_text = f'Mean: {stats["mean"]:.2f}\nStd: {stats["std"]:.2f}\nOutliers: {stats["outlier_count"]}'
             axes[row, col_idx].text(0.02, 0.98, stats_text, transform=axes[row, col_idx].transAxes,
-                                   verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8),
-                                   fontsize=8)
+                                   verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.9),
+                                   fontsize=9, fontweight='bold')
             
             # Set consistent axis limits
             axes[row, col_idx].set_xlim(global_min - global_range * 0.05, 
                                        global_max + global_range * 0.05)
+            
+            # Add grid for better readability
+            axes[row, col_idx].grid(True, alpha=0.3)
         
         # Hide empty subplots
         for i in range(n_variations, rows * cols_per_row):
@@ -368,7 +392,8 @@ class HistogramPermutationsGenerator:
             axes[row, col_idx].axis('off')
         
         plt.tight_layout()
-        plt.savefig(f'histogram_outputs/histogram_permutations_{column}.png', dpi=300, bbox_inches='tight')
+        plt.savefig(f'../outputs/histogram_outputs/histogram_permutations_{column}.png', 
+                   dpi=300, bbox_inches='tight')
         plt.close()
         
         print(f"[OK] Saved histogram permutations for {column}")
@@ -399,29 +424,34 @@ class HistogramPermutationsGenerator:
             print(f"[WARNING] No data for statistical comparison: {column}")
             return
         
-        # Create comparison chart
-        fig, axes = plt.subplots(2, 3, figsize=(18, 12))
-        fig.suptitle(f'Statistical Comparison: {column}', fontsize=16, fontweight='bold')
+        # Create comparison chart with improved styling
+        fig, axes = plt.subplots(2, 3, figsize=(20, 12))
+        fig.suptitle(f'Statistical Comparison Analysis: {column}', fontsize=16, fontweight='bold')
         
         metrics = ['Mean', 'Median', 'Std Dev', 'Skewness', 'Kurtosis', 'Outlier %']
+        colors = ['steelblue', 'lightcoral', 'lightgreen', 'gold', 'plum', 'orange']
         
-        for i, (metric, ax) in enumerate(zip(metrics, axes.flat)):
+        for i, (metric, ax, color) in enumerate(zip(metrics, axes.flat, colors)):
             values = [row[i] for row in comparison_data]
             
-            bars = ax.bar(range(len(labels)), values, color='skyblue', alpha=0.7)
-            ax.set_title(metric)
-            ax.set_ylabel(metric)
+            bars = ax.bar(range(len(labels)), values, color=color, alpha=0.8, edgecolor='black', linewidth=0.5)
+            ax.set_title(metric, fontsize=12, fontweight='bold')
+            ax.set_ylabel(metric, fontsize=10, fontweight='bold')
             ax.set_xticks(range(len(labels)))
-            ax.set_xticklabels(labels, rotation=45, ha='right')
+            ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=9)
             
             # Add value labels on bars
             for bar, value in zip(bars, values):
                 height = bar.get_height()
                 ax.text(bar.get_x() + bar.get_width()/2., height,
-                       f'{value:.2f}', ha='center', va='bottom')
+                       f'{value:.2f}', ha='center', va='bottom', fontweight='bold')
+            
+            # Add grid for better readability
+            ax.grid(True, alpha=0.3, axis='y')
         
         plt.tight_layout()
-        plt.savefig(f'histogram_outputs/statistical_comparison_{column}.png', dpi=300, bbox_inches='tight')
+        plt.savefig(f'../outputs/histogram_outputs/statistical_comparison_{column}.png', 
+                   dpi=300, bbox_inches='tight')
         plt.close()
         
         print(f"[OK] Saved statistical comparison for {column}")
@@ -532,7 +562,7 @@ class HistogramPermutationsGenerator:
         self.save_insights(all_insights)
         
         print(f"\n[OK] Comprehensive histogram analysis complete!")
-        print(f"[DATA] Check 'histogram_outputs/' directory for results")
+        print(f"[DATA] Check '../outputs/histogram_outputs/' directory for results")
     
     def save_insights(self, insights: Dict[str, List[str]]):
         """Save insights to file."""
@@ -541,7 +571,7 @@ class HistogramPermutationsGenerator:
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
         # Save as text
-        with open(f'histogram_outputs/insights_{timestamp}.txt', 'w') as f:
+        with open(f'../outputs/histogram_outputs/insights_{timestamp}.txt', 'w') as f:
             f.write("HISTOGRAM ANALYSIS INSIGHTS\n")
             f.write("=" * 50 + "\n\n")
             
@@ -553,10 +583,10 @@ class HistogramPermutationsGenerator:
                 f.write("\n")
         
         # Save as JSON
-        with open(f'histogram_outputs/insights_{timestamp}.json', 'w') as f:
+        with open(f'../outputs/histogram_outputs/insights_{timestamp}.json', 'w') as f:
             json.dump(insights, f, indent=2, default=str)
         
-        print(f"[OK] Insights saved to histogram_outputs/insights_{timestamp}.txt and .json")
+        print(f"[OK] Insights saved to ../outputs/histogram_outputs/insights_{timestamp}.txt and .json")
     
     def close(self):
         """Close the database connection."""
