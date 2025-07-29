@@ -1,0 +1,26 @@
+================================================================================
+DATA QUALITY ASSESSMENT REPORT
+================================================================================
+Dataset: sample_data.csv
+Generated: 2025-07-29 12:04:07
+Shape: 10 rows × 6 columns
+
+OVERALL QUALITY ASSESSMENT:
+------------------------------
+Overall Score: 83.5%
+Grade: B
+Quality Level: Good
+
+COMPONENT SCORES:
+--------------------
+Completeness: 100.0% (Grade: A)
+Accuracy: 90.0% (Grade: A)
+Consistency: 80.0% (Grade: B)
+Validity: 100.0% (Grade: A)
+Timeliness: 0.0% (Grade: D)
+
+RECOMMENDATIONS:
+--------------------
+• Standardize data formats to improve consistency
+• Clean formatting in columns: product_name, category, last_updated
+• Update data more frequently to improve timeliness
