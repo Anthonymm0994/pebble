@@ -1,0 +1,21 @@
+TABLE RELATIONSHIP ANALYSIS SUMMARY
+==================================================
+
+Tables Analyzed:
+  - sample_data: 10 rows, 6 columns
+  - sales: 100 rows, 8 columns
+
+Key Findings:
+  - High correlation timestamp pairs: 0
+  - Exact column matches: 4
+  - Potential transformations: 2
+  - Suggested joins: 1
+
+Exact Column Matches:
+  - category
+  - product_name
+  - price
+  - id
+
+Join Recommendations:
+  - Use exact value joins for high-confidence relationships

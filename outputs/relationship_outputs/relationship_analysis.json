@@ -1,0 +1,163 @@
+{
+  "table_info": {
+    "table1_name": "sample_data",
+    "table2_name": "sales",
+    "table1_rows": 10,
+    "table2_rows": 100,
+    "table1_columns": 6,
+    "table2_columns": 8
+  },
+  "timestamp_analysis": {
+    "timestamp_cols_table1": [
+      "last_updated"
+    ],
+    "timestamp_cols_table2": [
+      "sales_date"
+    ],
+    "correlations": [],
+    "delays": [],
+    "patterns": []
+  },
+  "column_analysis": {
+    "exact_matches": [
+      "category",
+      "product_name",
+      "price",
+      "id"
+    ],
+    "similar_names": [],
+    "similar_data_types": [
+      [
+        "id",
+        "quantity",
+        "int64"
+      ],
+      [
+        "product_name",
+        "category",
+        "object"
+      ],
+      [
+        "product_name",
+        "region",
+        "object"
+      ],
+      [
+        "product_name",
+        "sales_date",
+        "object"
+      ],
+      [
+        "category",
+        "product_name",
+        "object"
+      ],
+      [
+        "category",
+        "region",
+        "object"
+      ],
+      [
+        "category",
+        "sales_date",
+        "object"
+      ],
+      [
+        "price",
+        "profit_margin",
+        "float64"
+      ],
+      [
+        "in_stock",
+        "id",
+        "int64"
+      ],
+      [
+        "in_stock",
+        "quantity",
+        "int64"
+      ],
+      [
+        "last_updated",
+        "product_name",
+        "object"
+      ],
+      [
+        "last_updated",
+        "category",
+        "object"
+      ],
+      [
+        "last_updated",
+        "region",
+        "object"
+      ],
+      [
+        "last_updated",
+        "sales_date",
+        "object"
+      ]
+    ],
+    "value_overlaps": []
+  },
+  "transformation_analysis": {
+    "filters": [
+      {
+        "column": "product_name",
+        "filtered_values": [
+          "Laptop Pro 15",
+          "Webcam HD",
+          "USB-C Cable",
+          "Monitor Stand",
+          "Standing Desk",
+          "Office Chair",
+          "Desk Lamp",
+          "Wireless Mouse",
+          "Mechanical Keyboard",
+          "Ergonomic Footrest"
+        ],
+        "filter_type": "exclusion"
+      },
+      {
+        "column": "price",
+        "filtered_values": [
+          39.99,
+          299.5,
+          45.0,
+          79.95,
+          49.99,
+          19.99,
+          1299.99,
+          149.99,
+          599.0,
+          89.99
+        ],
+        "filter_type": "exclusion"
+      }
+    ],
+    "aggregations": [],
+    "column_mappings": [],
+    "value_transformations": []
+  },
+  "join_analysis": {
+    "exact_joins": [
+      {
+        "table1_column": "id",
+        "table2_column": "quantity",
+        "overlap_ratio": 0.9,
+        "join_type": "exact"
+      }
+    ],
+    "fuzzy_joins": [],
+    "timestamp_joins": [],
+    "recommendations": [
+      "Use exact value joins for high-confidence relationships"
+    ]
+  },
+  "summary": {
+    "high_correlation_pairs": 0,
+    "exact_column_matches": 4,
+    "potential_transformations": 2,
+    "suggested_joins": 1
+  }
+}

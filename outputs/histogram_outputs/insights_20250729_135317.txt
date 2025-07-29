@@ -1,0 +1,7 @@
+HISTOGRAM ANALYSIS INSIGHTS
+==================================================
+
+Column: in_stock
+--------------------
+• Only one variation available for in_stock - no comparison possible
+
