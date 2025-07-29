@@ -1,0 +1,21 @@
+id,product_name,category,price,in_stock,message_time,priority,amount
+1,Laptop Pro 15,Electronics,1299.99,true,16:07:34.053,high,1500.00
+2,Office Chair,Furniture,299.50,true,14:23:12.456,medium,350.00
+3,USB-C Cable,Electronics,19.99,false,09:45:28.789,low,25.00
+4,Standing Desk,Furniture,599.00,true,11:32:45.123,high,650.00
+5,Wireless Mouse,Electronics,49.99,true,13:18:56.234,medium,55.00
+6,Desk Lamp,Furniture,79.95,false,08:52:33.567,low,85.00
+7,Mechanical Keyboard,Electronics,149.99,true,15:41:22.890,high,170.00
+8,Monitor Stand,Furniture,39.99,true,10:27:44.345,medium,45.00
+9,Webcam HD,Electronics,89.99,true,12:15:38.678,medium,100.00
+10,Ergonomic Footrest,Furniture,45.00,false,07:33:19.012,low,50.00
+11,Gaming Headset,Electronics,199.99,true,17:55:42.345,high,220.00
+12,Desk Organizer,Furniture,29.99,true,06:48:15.678,low,35.00
+13,External SSD,Electronics,129.99,true,18:22:33.901,high,150.00
+14,Monitor Arm,Furniture,89.99,true,05:19:47.234,medium,95.00
+15,Bluetooth Speaker,Electronics,79.99,false,19:37:28.567,medium,90.00
+16,File Cabinet,Furniture,199.99,true,04:12:55.890,low,220.00
+17,Graphics Card,Electronics,899.99,true,20:44:16.123,high,950.00
+18,Desk Chair,Furniture,399.99,true,03:28:39.456,high,450.00
+19,Wireless Earbuds,Electronics,129.99,true,21:15:52.789,medium,140.00
+20,Bookshelf,Furniture,149.99,false,02:41:23.012,low,160.00 
