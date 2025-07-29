@@ -1,6 +1,6 @@
 COMPREHENSIVE DATA PROFILE REPORT
 ==================================================
-Generated: 2025-07-29 12:13:52
+Generated: 2025-07-29 12:24:46
 Data Source: ../sample_data.csv
 Dataset Shape: 10 rows x 6 columns
 

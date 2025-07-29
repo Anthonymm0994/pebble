@@ -38,30 +38,51 @@ sns.set_palette("husl")
 
 class HistogramPermutationsGenerator:
     """
-    Generate histogram permutations based on SQL queries with WHERE clause variations.
+    Generate histogram permutations based on SQL queries with various WHERE clause predicates.
     """
     
-    def __init__(self, db_path: str):
+    def __init__(self, data_source: str):
         """
         Initialize the histogram permutations generator.
         
         Args:
-            db_path: Path to the SQLite database file
+            data_source: Path to CSV file or database file
         """
-        self.db_path = db_path
+        self.data_source = data_source
+        self.df = None
         self.conn = None
         self.query_results = {}
         self.histogram_data = {}
         
-    def connect(self) -> bool:
-        """Establish connection to the database."""
+    def load_data(self):
+        """Load data from CSV file or database."""
+        print(f"[DATA] Loading data from: {self.data_source}")
+        
         try:
-            self.conn = sqlite3.connect(self.db_path)
-            print(f"[OK] Connected to database: {self.db_path}")
-            return True
+            if self.data_source.endswith('.csv'):
+                self.df = pd.read_csv(self.data_source)
+                print(f"[OK] Loaded CSV dataset: {len(self.df)} rows, {len(self.df.columns)} columns")
+                return self.df
+            else:
+                # Assume it's a database file
+                self.conn = sqlite3.connect(self.data_source)
+                # Get first table
+                cursor = self.conn.cursor()
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+                tables = cursor.fetchall()
+                if tables:
+                    first_table = tables[0][0]
+                    self.df = pd.read_sql_query(f"SELECT * FROM {first_table}", self.conn)
+                    print(f"[INFO] Loaded table: {first_table}")
+                else:
+                    raise ValueError("No tables found in database")
+            
+            print(f"[OK] Loaded dataset: {len(self.df)} rows, {len(self.df.columns)} columns")
+            return self.df
+            
         except Exception as e:
-            print(f"[ERROR] Error connecting to database: {e}")
-            return False
+            print(f"[ERROR] Error loading data: {e}")
+            return None
     
     def parse_sql_query(self, query: str) -> Dict:
         """Parse SQL query to extract components."""
@@ -204,40 +225,59 @@ class HistogramPermutationsGenerator:
         return variations
     
     def execute_query_variations(self, variations: List[Dict]) -> Dict:
-        """Execute all query variations and store results."""
+        """Execute query variations and store results."""
         print(f"\n[EXECUTE] Executing query variations...")
         
         results = {}
         
-        for variation in variations:
+        for i, variation in enumerate(variations, 1):
+            print(f"[QUERY] Executing: Variation {i}: {variation.get('where_conditions', ['No conditions'])}")
+            
             try:
-                print(f"[QUERY] Executing: {variation['description']}")
-                df = pd.read_sql_query(variation['query'], self.conn)
-                
-                results[variation['id']] = {
-                    'query': variation['query'],
-                    'description': variation['description'],
-                    'data': df,
-                    'row_count': len(df),
-                    'column_count': len(df.columns),
-                    'columns': list(df.columns)
-                }
-                
-                print(f"[OK] Retrieved {len(df)} rows, {len(df.columns)} columns")
-                
+                if self.data_source.endswith('.csv'):
+                    # For CSV files, filter the DataFrame based on conditions
+                    filtered_df = self.df.copy()
+                    
+                    # Apply WHERE conditions
+                    where_conditions = variation.get('where_conditions', [])
+                    for condition in where_conditions:
+                        # Simple condition parsing for CSV data
+                        if '>' in condition:
+                            col, val = condition.split('>')
+                            col = col.strip()
+                            val = float(val.strip())
+                            filtered_df = filtered_df[filtered_df[col] > val]
+                        elif '<' in condition:
+                            col, val = condition.split('<')
+                            col = col.strip()
+                            val = float(val.strip())
+                            filtered_df = filtered_df[filtered_df[col] < val]
+                        elif '==' in condition:
+                            col, val = condition.split('==')
+                            col = col.strip()
+                            val = val.strip().strip("'").strip('"')
+                            filtered_df = filtered_df[filtered_df[col] == val]
+                        elif '!=' in condition:
+                            col, val = condition.split('!=')
+                            col = col.strip()
+                            val = val.strip().strip("'").strip('"')
+                            filtered_df = filtered_df[filtered_df[col] != val]
+                    
+                    results[f"variation_{i}"] = filtered_df
+                    print(f"[OK] Filtered to {len(filtered_df)} rows")
+                    
+                else:
+                    # For database files, execute SQL queries
+                    query = self.build_sql_query(variation)
+                    result_df = pd.read_sql_query(query, self.conn)
+                    results[f"variation_{i}"] = result_df
+                    print(f"[OK] Retrieved {len(result_df)} rows")
+                    
             except Exception as e:
-                print(f"[ERROR] Failed to execute variation {variation['id']}: {e}")
-                results[variation['id']] = {
-                    'query': variation['query'],
-                    'description': variation['description'],
-                    'error': str(e),
-                    'data': None,
-                    'row_count': 0,
-                    'column_count': 0,
-                    'columns': []
-                }
+                print(f"[ERROR] Failed to execute variation {i}: {e}")
+                results[f"variation_{i}"] = pd.DataFrame()  # Empty DataFrame for failed queries
         
-        self.query_results = results
+        print(f"[OK] Executed {len(variations)} query variations")
         return results
     
     def analyze_numeric_columns(self, df: pd.DataFrame) -> List[str]:
@@ -253,21 +293,22 @@ class HistogramPermutationsGenerator:
         
         return suitable_cols
     
-    def create_histogram_variations(self, column: str, data_variations: Dict) -> Dict:
-        """Create histogram variations for a specific column across all query results."""
-        print(f"\n[HISTOGRAM] Creating histogram variations for column: {column}")
+    def create_histogram_variations(self, column: str, query_results: Dict) -> Dict:
+        """Create histogram variations for a specific column."""
+        print(f"[BUILD] Creating histogram variations for {column}")
         
         histogram_data = {}
         
-        for var_id, result in data_variations.items():
-            if result.get('error') or result['data'] is None:
+        for variation_id, result_df in query_results.items():
+            if result_df.empty:
                 continue
             
-            df = result['data']
-            if column not in df.columns:
+            if column not in result_df.columns:
                 continue
             
-            data = df[column].dropna()
+            # Get data for the column
+            data = result_df[column].dropna()
+            
             if len(data) == 0:
                 continue
             
@@ -275,186 +316,161 @@ class HistogramPermutationsGenerator:
             stats = {
                 'count': len(data),
                 'mean': data.mean(),
-                'median': data.median(),
                 'std': data.std(),
                 'min': data.min(),
                 'max': data.max(),
+                'median': data.median(),
                 'q25': data.quantile(0.25),
-                'q75': data.quantile(0.75),
-                'skewness': data.skew(),
-                'kurtosis': data.kurtosis()
+                'q75': data.quantile(0.75)
             }
             
-            # Detect outliers
-            Q1 = data.quantile(0.25)
-            Q3 = data.quantile(0.75)
-            IQR = Q3 - Q1
-            outliers = data[(data < Q1 - 1.5 * IQR) | (data > Q3 + 1.5 * IQR)]
-            stats['outlier_count'] = len(outliers)
-            stats['outlier_percentage'] = (len(outliers) / len(data)) * 100
-            
-            histogram_data[var_id] = {
-                'description': result['description'],
+            histogram_data[variation_id] = {
                 'data': data,
                 'stats': stats,
-                'row_count': result['row_count']
+                'variation_id': variation_id
             }
+        
+        if histogram_data:
+            print(f"[OK] Created {len(histogram_data)} histogram variations for {column}")
+        else:
+            print(f"[WARNING] No valid histogram data for {column}")
         
         return histogram_data
     
     def create_comparative_histograms(self, column: str, histogram_data: Dict):
-        """Create comparative histograms with consistent axis labels."""
-        print(f"\n[CHART] Creating comparative histograms for: {column}")
+        """Create comparative histograms for all variations."""
+        print(f"[CHART] Creating comparative histograms for: {column}")
+        
+        if not histogram_data:
+            print(f"[WARNING] No histogram data available for {column}")
+            return
         
         # Create output directory
         os.makedirs('../outputs/histogram_outputs', exist_ok=True)
         
-        # Determine consistent axis limits
-        all_data = []
-        for var_data in histogram_data.values():
-            all_data.extend(var_data['data'].tolist())
-        
-        if not all_data:
-            print(f"[WARNING] No data available for column: {column}")
-            return
-        
-        global_min = min(all_data)
-        global_max = max(all_data)
-        global_range = global_max - global_min
-        
-        # Create subplots
+        # Create subplot layout
         n_variations = len(histogram_data)
-        if n_variations == 0:
-            print(f"[WARNING] No valid variations for column: {column}")
-            return
-        
-        cols_per_row = 3
-        rows = (n_variations + cols_per_row - 1) // cols_per_row
-        
-        fig, axes = plt.subplots(rows, cols_per_row, figsize=(18, 6 * rows))
-        fig.suptitle(f'Histogram Permutations Analysis: {column}', fontsize=16, fontweight='bold')
-        
-        if rows == 1:
-            axes = axes.reshape(1, -1)
+        if n_variations <= 2:
+            fig, axes = plt.subplots(1, n_variations, figsize=(15, 6))
+            if n_variations == 1:
+                axes = [axes]
+        else:
+            cols = min(3, n_variations)
+            rows = (n_variations + cols - 1) // cols
+            fig, axes = plt.subplots(rows, cols, figsize=(15, 5*rows))
+            axes = axes.flatten() if rows > 1 else axes
         
         # Create histograms for each variation
         for i, (var_id, var_data) in enumerate(histogram_data.items()):
-            row = i // cols_per_row
-            col_idx = i % cols_per_row
-            
+            if i >= len(axes):
+                break
+                
+            ax = axes[i]
             data = var_data['data']
             stats = var_data['stats']
-            description = var_data['description']
             
-            # Create histogram with consistent bins
-            bins = np.linspace(global_min - global_range * 0.05, 
-                              global_max + global_range * 0.05, 30)
+            # Create histogram
+            ax.hist(data, bins=min(20, len(data)//2), alpha=0.7, color='steelblue', edgecolor='black')
             
-            # Create histogram with improved styling
-            n, bins, patches = axes[row, col_idx].hist(data, bins=bins, alpha=0.7, 
-                                                      color='steelblue', edgecolor='black', linewidth=0.5)
+            # Add mean and median lines
+            ax.axvline(stats['mean'], color='red', linestyle='--', linewidth=2, label=f'Mean: {stats["mean"]:.2f}')
+            ax.axvline(stats['median'], color='orange', linestyle='--', linewidth=2, label=f'Median: {stats["median"]:.2f}')
             
-            # Add mean line
-            mean_val = stats["mean"]
-            axes[row, col_idx].axvline(mean_val, color='red', linestyle='--', linewidth=2, 
-                                      label=f'Mean: {mean_val:.2f}')
+            # Add statistics text
+            stats_text = f'Count: {stats["count"]}\nMean: {stats["mean"]:.2f}\nStd: {stats["std"]:.2f}\nMin: {stats["min"]:.2f}\nMax: {stats["max"]:.2f}'
+            ax.text(0.02, 0.98, stats_text, transform=ax.transAxes, verticalalignment='top',
+                   bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
             
-            # Add median line
-            median_val = stats["median"]
-            axes[row, col_idx].axvline(median_val, color='orange', linestyle='-', linewidth=2, 
-                                      label=f'Median: {median_val:.2f}')
-            
-            # Set title and labels
-            axes[row, col_idx].set_title(f'{description}\n(n={stats["count"]})', fontsize=12, fontweight='bold')
-            axes[row, col_idx].set_xlabel(f'{column} Values', fontsize=10, fontweight='bold')
-            axes[row, col_idx].set_ylabel('Frequency', fontsize=10, fontweight='bold')
-            
-            # Add legend
-            axes[row, col_idx].legend(loc='upper right', fontsize=8)
-            
-            # Add statistics text box
-            stats_text = f'Mean: {stats["mean"]:.2f}\nStd: {stats["std"]:.2f}\nOutliers: {stats["outlier_count"]}'
-            axes[row, col_idx].text(0.02, 0.98, stats_text, transform=axes[row, col_idx].transAxes,
-                                   verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.9),
-                                   fontsize=9, fontweight='bold')
-            
-            # Set consistent axis limits
-            axes[row, col_idx].set_xlim(global_min - global_range * 0.05, 
-                                       global_max + global_range * 0.05)
-            
-            # Add grid for better readability
-            axes[row, col_idx].grid(True, alpha=0.3)
+            ax.set_title(f'Variation {i+1}: {column}', fontsize=12, fontweight='bold')
+            ax.set_xlabel(column, fontweight='bold')
+            ax.set_ylabel('Frequency', fontweight='bold')
+            ax.legend()
+            ax.grid(True, alpha=0.3)
         
-        # Hide empty subplots
-        for i in range(n_variations, rows * cols_per_row):
-            row = i // cols_per_row
-            col_idx = i % cols_per_row
-            axes[row, col_idx].axis('off')
+        # Hide unused subplots
+        for i in range(len(histogram_data), len(axes)):
+            axes[i].set_visible(False)
         
         plt.tight_layout()
-        plt.savefig(f'../outputs/histogram_outputs/histogram_permutations_{column}.png', 
-                   dpi=300, bbox_inches='tight')
+        plt.savefig(f'../outputs/histogram_outputs/comparative_histograms_{column}.png', dpi=300, bbox_inches='tight')
         plt.close()
         
-        print(f"[OK] Saved histogram permutations for {column}")
+        print(f"[OK] Comparative histograms saved for {column}")
     
     def create_statistical_comparison(self, column: str, histogram_data: Dict):
         """Create statistical comparison chart for all variations."""
-        print(f"\n[STATS] Creating statistical comparison for: {column}")
+        print(f"[STATS] Creating statistical comparison for: {column}")
+        
+        if not histogram_data:
+            print(f"[WARNING] No histogram data available for {column}")
+            return
+        
+        # Create output directory
+        os.makedirs('../outputs/histogram_outputs', exist_ok=True)
         
         # Prepare data for comparison
-        comparison_data = []
-        labels = []
+        variations = []
+        means = []
+        medians = []
+        stds = []
+        counts = []
         
         for var_id, var_data in histogram_data.items():
             stats = var_data['stats']
-            description = var_data['description']
-            
-            comparison_data.append([
-                stats['mean'],
-                stats['median'],
-                stats['std'],
-                stats['skewness'],
-                stats['kurtosis'],
-                stats['outlier_percentage']
-            ])
-            labels.append(description[:30] + '...' if len(description) > 30 else description)
+            variations.append(f'Variation {len(variations)+1}')
+            means.append(stats['mean'])
+            medians.append(stats['median'])
+            stds.append(stats['std'])
+            counts.append(stats['count'])
         
-        if not comparison_data:
-            print(f"[WARNING] No data for statistical comparison: {column}")
-            return
+        # Create comparison chart
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 10))
         
-        # Create comparison chart with improved styling
-        fig, axes = plt.subplots(2, 3, figsize=(20, 12))
-        fig.suptitle(f'Statistical Comparison Analysis: {column}', fontsize=16, fontweight='bold')
+        # Mean comparison
+        bars1 = ax1.bar(variations, means, color='steelblue', alpha=0.7)
+        ax1.set_title('Mean Values Comparison', fontweight='bold')
+        ax1.set_ylabel('Mean', fontweight='bold')
+        ax1.grid(True, alpha=0.3)
+        # Add value labels on bars
+        for bar, mean in zip(bars1, means):
+            ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01*max(means),
+                    f'{mean:.2f}', ha='center', va='bottom', fontweight='bold')
         
-        metrics = ['Mean', 'Median', 'Std Dev', 'Skewness', 'Kurtosis', 'Outlier %']
-        colors = ['steelblue', 'lightcoral', 'lightgreen', 'gold', 'plum', 'orange']
+        # Median comparison
+        bars2 = ax2.bar(variations, medians, color='orange', alpha=0.7)
+        ax2.set_title('Median Values Comparison', fontweight='bold')
+        ax2.set_ylabel('Median', fontweight='bold')
+        ax2.grid(True, alpha=0.3)
+        # Add value labels on bars
+        for bar, median in zip(bars2, medians):
+            ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01*max(medians),
+                    f'{median:.2f}', ha='center', va='bottom', fontweight='bold')
         
-        for i, (metric, ax, color) in enumerate(zip(metrics, axes.flat, colors)):
-            values = [row[i] for row in comparison_data]
-            
-            bars = ax.bar(range(len(labels)), values, color=color, alpha=0.8, edgecolor='black', linewidth=0.5)
-            ax.set_title(metric, fontsize=12, fontweight='bold')
-            ax.set_ylabel(metric, fontsize=10, fontweight='bold')
-            ax.set_xticks(range(len(labels)))
-            ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=9)
-            
-            # Add value labels on bars
-            for bar, value in zip(bars, values):
-                height = bar.get_height()
-                ax.text(bar.get_x() + bar.get_width()/2., height,
-                       f'{value:.2f}', ha='center', va='bottom', fontweight='bold')
-            
-            # Add grid for better readability
-            ax.grid(True, alpha=0.3, axis='y')
+        # Standard deviation comparison
+        bars3 = ax3.bar(variations, stds, color='green', alpha=0.7)
+        ax3.set_title('Standard Deviation Comparison', fontweight='bold')
+        ax3.set_ylabel('Standard Deviation', fontweight='bold')
+        ax3.grid(True, alpha=0.3)
+        # Add value labels on bars
+        for bar, std in zip(bars3, stds):
+            ax3.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01*max(stds),
+                    f'{std:.2f}', ha='center', va='bottom', fontweight='bold')
+        
+        # Count comparison
+        bars4 = ax4.bar(variations, counts, color='red', alpha=0.7)
+        ax4.set_title('Data Count Comparison', fontweight='bold')
+        ax4.set_ylabel('Count', fontweight='bold')
+        ax4.grid(True, alpha=0.3)
+        # Add value labels on bars
+        for bar, count in zip(bars4, counts):
+            ax4.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01*max(counts),
+                    f'{count}', ha='center', va='bottom', fontweight='bold')
         
         plt.tight_layout()
-        plt.savefig(f'../outputs/histogram_outputs/statistical_comparison_{column}.png', 
-                   dpi=300, bbox_inches='tight')
+        plt.savefig(f'../outputs/histogram_outputs/statistical_comparison_{column}.png', dpi=300, bbox_inches='tight')
         plt.close()
         
-        print(f"[OK] Saved statistical comparison for {column}")
+        print(f"[OK] Statistical comparison saved for {column}")
     
     def generate_insights(self, column: str, histogram_data: Dict) -> List[str]:
         """Generate insights from histogram variations."""
@@ -516,50 +532,43 @@ class HistogramPermutationsGenerator:
         variations = self.build_query_variations(parsed_query)
         
         # Execute all variations
-        results = self.execute_query_variations(variations)
+        query_results = self.execute_query_variations(variations)
         
-        # Find numeric columns for analysis
+        # Analyze numeric columns for histogram generation
         numeric_columns = []
-        for var_id, result in results.items():
-            if result.get('error') or result['data'] is None:
-                continue
-            
-            df = result['data']
-            cols = self.analyze_numeric_columns(df)
-            numeric_columns.extend(cols)
+        for result_key, result_df in query_results.items():
+            if not result_df.empty:
+                cols = self.analyze_numeric_columns(result_df)
+                numeric_columns.extend(cols)
         
-        numeric_columns = list(set(numeric_columns))  # Remove duplicates
+        # Remove duplicates
+        numeric_columns = list(set(numeric_columns))
         
         if not numeric_columns:
             print(f"[WARNING] No suitable numeric columns found for histogram analysis")
             return
         
-        print(f"[OK] Found {len(numeric_columns)} suitable numeric columns: {numeric_columns}")
+        print(f"[OK] Found {len(numeric_columns)} numeric columns for analysis")
         
-        # Create analysis for each column
-        all_insights = {}
-        
+        # Create histograms for each numeric column
         for column in numeric_columns:
-            print(f"\n[ANALYSIS] Analyzing column: {column}")
+            print(f"\n[HISTOGRAM] Creating histograms for column: {column}")
             
             # Create histogram variations
-            histogram_data = self.create_histogram_variations(column, results)
+            histogram_data = self.create_histogram_variations(column, query_results)
             
             if histogram_data:
-                # Create visualizations
+                # Create comparative histograms
                 self.create_comparative_histograms(column, histogram_data)
+                
+                # Create statistical comparison
                 self.create_statistical_comparison(column, histogram_data)
                 
                 # Generate insights
                 insights = self.generate_insights(column, histogram_data)
-                all_insights[column] = insights
                 
-                print(f"[OK] Completed analysis for {column}")
-            else:
-                print(f"[WARNING] No valid data for column: {column}")
-        
-        # Save insights
-        self.save_insights(all_insights)
+                # Store insights
+                self.save_insights({column: insights})
         
         print(f"\n[OK] Comprehensive histogram analysis complete!")
         print(f"[DATA] Check '../outputs/histogram_outputs/' directory for results")
@@ -600,31 +609,37 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='Generate histogram permutations from SQL query')
-    parser.add_argument('db_path', help='Path to the SQLite database file')
+    parser.add_argument('data_source', help='Path to CSV file or SQLite database file')
     parser.add_argument('--query', help='SQL query to analyze')
-    parser.add_argument('--file', help='File containing SQL query')
     
     args = parser.parse_args()
     
     # Create generator
-    generator = HistogramPermutationsGenerator(args.db_path)
+    generator = HistogramPermutationsGenerator(args.data_source)
     
     try:
-        # Connect to database
-        if not generator.connect():
+        # Load data
+        df = generator.load_data()
+        if df is None:
             return
         
-        # Get SQL query
-        sql_query = None
+        # Use provided query or default
         if args.query:
             sql_query = args.query
-        elif args.file:
-            with open(args.file, 'r') as f:
-                sql_query = f.read().strip()
         else:
             # Default query for testing
-            sql_query = "SELECT * FROM sample_data WHERE price > 0"
-            print(f"[INFO] Using default query: {sql_query}")
+            if args.data_source.endswith('.csv'):
+                # For CSV files, create a simple filter query
+                numeric_cols = df.select_dtypes(include=[np.number]).columns
+                if len(numeric_cols) > 0:
+                    first_col = numeric_cols[0]
+                    sql_query = f"SELECT * FROM data WHERE {first_col} > 0"
+                else:
+                    sql_query = "SELECT * FROM data"
+            else:
+                sql_query = "SELECT * FROM data WHERE id > 0"
+        
+        print(f"[INFO] Using query: {sql_query}")
         
         # Run comprehensive analysis
         generator.create_comprehensive_analysis(sql_query)

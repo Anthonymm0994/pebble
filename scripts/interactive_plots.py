@@ -84,13 +84,28 @@ class InteractivePlots:
         try:
             # Handle the format like "16:07:34.053"
             time_parts = time_str.strip().split(':')
-            hours = int(time_parts[0])
-            minutes = int(time_parts[1])
-            seconds = float(time_parts[2])
             
-            # Convert to decimal hours
-            decimal_hours = hours + minutes/60 + seconds/3600
-            return decimal_hours
+            # Check if this is a time format (has at least 2 parts and first part is < 24)
+            if len(time_parts) >= 2:
+                hours = int(time_parts[0])
+                if hours < 24:  # This looks like a time format
+                    minutes = int(time_parts[1])
+                    if len(time_parts) >= 3:
+                        seconds = float(time_parts[2])
+                    else:
+                        seconds = 0
+                    
+                    # Convert to decimal hours
+                    decimal_hours = hours + minutes/60 + seconds/3600
+                    return decimal_hours
+                else:
+                    # This might be a date format, try to extract time component
+                    print(f"[INFO] Detected date format: {time_str}, skipping time parsing")
+                    return 0.0
+            else:
+                print(f"[WARNING] Could not parse time format: {time_str}")
+                return 0.0
+                
         except Exception as e:
             print(f"[WARNING] Could not parse time: {time_str}, error: {e}")
             return 0.0
