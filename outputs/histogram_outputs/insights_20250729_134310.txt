@@ -1,0 +1,7 @@
+HISTOGRAM ANALYSIS INSIGHTS
+==================================================
+
+Column: price
+--------------------
+• Only one variation available for price - no comparison possible
+

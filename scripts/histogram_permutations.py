@@ -224,6 +224,34 @@ class HistogramPermutationsGenerator:
         print(f"[OK] Built {len(variations)} query variations")
         return variations
     
+    def build_sql_query(self, variation: Dict) -> str:
+        """Build SQL query from variation dictionary."""
+        select_clause = ', '.join(variation.get('select_columns', ['*']))
+        from_clause = variation.get('from_table', 'sample_data')  # Use actual table name
+        
+        query = f"SELECT {select_clause} FROM {from_clause}"
+        
+        where_conditions = variation.get('where_conditions', [])
+        if where_conditions:
+            where_clause = ' AND '.join(where_conditions)
+            query += f" WHERE {where_clause}"
+        
+        group_by = variation.get('group_by', [])
+        if group_by:
+            group_clause = ', '.join(group_by)
+            query += f" GROUP BY {group_clause}"
+        
+        order_by = variation.get('order_by', [])
+        if order_by:
+            order_clause = ', '.join(order_by)
+            query += f" ORDER BY {order_clause}"
+        
+        limit = variation.get('limit')
+        if limit:
+            query += f" LIMIT {limit}"
+        
+        return query
+
     def execute_query_variations(self, variations: List[Dict]) -> Dict:
         """Execute query variations and store results."""
         print(f"\n[EXECUTE] Executing query variations...")
@@ -637,7 +665,18 @@ def main():
                 else:
                     sql_query = "SELECT * FROM data"
             else:
-                sql_query = "SELECT * FROM data WHERE id > 0"
+                # Get the first table name from the database
+                if generator.conn:
+                    cursor = generator.conn.cursor()
+                    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+                    tables = cursor.fetchall()
+                    if tables:
+                        first_table = tables[0][0]
+                        sql_query = f"SELECT * FROM {first_table} WHERE id > 0"
+                    else:
+                        sql_query = "SELECT * FROM data WHERE id > 0"
+                else:
+                    sql_query = "SELECT * FROM data WHERE id > 0"
         
         print(f"[INFO] Using query: {sql_query}")
         

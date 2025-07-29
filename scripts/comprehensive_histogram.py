@@ -31,16 +31,16 @@ import json
 from pathlib import Path
 
 # Configuration
-DATABASE_PATH = "sample_data.sqlite"  # Change to your database
-OUTPUT_DIR = "histogram_outputs"
+DATABASE_PATH = "../test_data/sample_database.sqlite"  # Default database
+OUTPUT_DIR = "../outputs/comprehensive_histogram_outputs"
 SAVE_FORMATS = ["png", "pdf", "svg"]  # Multiple formats
 DPI = 300
 FIGURE_SIZE = (12, 8)
 
 # Query Configuration
 BASE_QUERY = "SELECT {columns} FROM {table} WHERE {conditions}"
-DEFAULT_TABLE = "sales"
-DEFAULT_COLUMNS = ["amount", "quantity", "profit_margin"]
+DEFAULT_TABLE = "sample_data"
+DEFAULT_COLUMNS = ["id", "price", "in_stock"]
 
 # Statistical Analysis Settings
 CONFIDENCE_LEVEL = 0.95
@@ -507,9 +507,9 @@ def main():
     # Generate comprehensive analysis
     print("\nGenerating comprehensive histogram analysis...")
     hist_gen.generate_comprehensive_analysis(
-        table='sales',
-        columns=['amount', 'quantity', 'profit_margin'],
-        filters=example_filters,
+        table='sample_data',
+        columns=['id', 'price', 'in_stock'],
+        filters=None,  # No filters for sample data
         max_permutations=3
     )
     

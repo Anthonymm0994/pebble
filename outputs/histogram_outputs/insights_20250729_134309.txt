@@ -1,0 +1,7 @@
+HISTOGRAM ANALYSIS INSIGHTS
+==================================================
+
+Column: id
+--------------------
+• Only one variation available for id - no comparison possible
+

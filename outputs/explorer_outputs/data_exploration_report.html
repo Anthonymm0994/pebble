@@ -1,0 +1,32 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Data Exploration Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { background-color: #f0f0f0; padding: 20px; border-radius: 5px; }
+                .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+                .insight { background-color: #e8f4f8; padding: 10px; margin: 10px 0; border-radius: 3px; }
+                .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin: 10px 0; border-radius: 3px; }
+                .success { background-color: #d4edda; border: 1px solid #c3e6cb; padding: 10px; margin: 10px 0; border-radius: 3px; }
+                table { border-collapse: collapse; width: 100%; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Data Exploration Report</h1>
+                <p><strong>Dataset:</strong> ../test_data/sample_database.sqlite</p>
+                <p><strong>Generated:</strong> 2025-07-29 13:51:39</p>
+                <p><strong>Shape:</strong> 10 rows × 6 columns</p>
+            </div>
+            
+            <div class="section">
+                <h2>Key Insights</h2>
+        <div class="insight">[OK] Excellent data quality: No missing values detected</div><div class="insight">[CORRELATION] id: Data appears to follow normal distribution</div><div class="insight">[ANOMALY] price: 20.0% outliers detected - consider investigation</div><div class="insight">[TREND] price: Distribution is right-skewed (skewness: 2.27)</div><div class="insight">[CORRELATION] price: Data does not follow normal distribution</div><div class="insight">[TREND] in_stock: Distribution is left-skewed (skewness: -1.04)</div><div class="insight">[CORRELATION] in_stock: Data does not follow normal distribution</div><div class="insight">[KEY] product_name: High uniqueness (100.0%) - potential identifier</div><div class="insight">[KEY] last_updated: High uniqueness (100.0%) - potential identifier</div><div class="insight">[WARNING]  2 outliers detected across numeric columns</div>
+            </div>
+        </body>
+        </html>
+        

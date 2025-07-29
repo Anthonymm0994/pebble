@@ -1,0 +1,53 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Data Quality Assessment Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { background-color: #f0f0f0; padding: 20px; border-radius: 5px; }
+                .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+                .score { font-size: 24px; font-weight: bold; color: #2c3e50; }
+                .grade-a { color: #27ae60; }
+                .grade-b { color: #f39c12; }
+                .grade-c { color: #e67e22; }
+                .grade-d { color: #e74c3c; }
+                .grade-f { color: #c0392b; }
+                .recommendation { background-color: #e8f4f8; padding: 10px; margin: 10px 0; border-radius: 3px; }
+                table { border-collapse: collapse; width: 100%; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Data Quality Assessment Report</h1>
+                <p><strong>Dataset:</strong> ../test_data/sample_database.sqlite</p>
+                <p><strong>Generated:</strong> 2025-07-29 13:51:44</p>
+                <p><strong>Shape:</strong> 10 rows × 6 columns</p>
+            </div>
+            
+            <div class="section">
+                <h2>Overall Quality Assessment</h2>
+                <p class="score grade-b">
+                    Overall Score: 84.3% 
+                    (Grade: B)
+                </p>
+                <p><strong>Quality Level:</strong> Good</p>
+            </div>
+            
+            <div class="section">
+                <h2>Component Scores</h2>
+                <table>
+                    <tr><th>Component</th><th>Score</th><th>Grade</th></tr>
+        <tr><td>Completeness</td><td>100.0%</td><td>A</td></tr><tr><td>Accuracy</td><td>93.3%</td><td>A</td></tr><tr><td>Consistency</td><td>80.0%</td><td>B</td></tr><tr><td>Validity</td><td>100.0%</td><td>A</td></tr><tr><td>Timeliness</td><td>0.0%</td><td>D</td></tr>
+                </table>
+            </div>
+            
+            <div class="section">
+                <h2>Recommendations</h2>
+        <div class="recommendation">• Standardize data formats to improve consistency</div><div class="recommendation">• Clean formatting in columns: product_name, category, last_updated</div><div class="recommendation">• Update data more frequently to improve timeliness</div>
+            </div>
+        </body>
+        </html>
+        

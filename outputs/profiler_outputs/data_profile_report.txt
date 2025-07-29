@@ -1,0 +1,59 @@
+COMPREHENSIVE DATA PROFILE REPORT
+==================================================
+Generated: 2025-07-29 13:51:18
+Data Source: ../test_data/sample_database.sqlite
+Dataset Shape: 10 rows x 6 columns
+
+DATA TYPES SUMMARY
+--------------------
+id: int64 (10 unique values)
+product_name: object (10 unique values)
+category: object (2 unique values)
+price: float64 (10 unique values)
+in_stock: int64 (2 unique values)
+last_updated: object (10 unique values)
+
+MISSING DATA SUMMARY
+--------------------
+Overall missing data: 0.00%
+Missing data by column:
+  id: 0.00% missing
+  product_name: 0.00% missing
+  category: 0.00% missing
+  price: 0.00% missing
+  in_stock: 0.00% missing
+  last_updated: 0.00% missing
+
+NUMERIC COLUMN ANALYSIS
+--------------------
+id:
+  Mean: 5.50
+  Median: 5.50
+  Std: 3.03
+  Outliers: 0 (0.00%)
+  Distribution: normal
+
+price:
+  Mean: 267.34
+  Median: 84.97
+  Std: 403.77
+  Outliers: 2 (20.00%)
+  Distribution: right_skewed
+
+in_stock:
+  Mean: 0.70
+  Median: 1.00
+  Std: 0.48
+  Outliers: 0 (0.00%)
+  Distribution: left_skewed
+
+DATA PATTERNS
+--------------------
+Duplicate rows: 0
+Constant columns: 0
+ID columns: 4
+
+RECOMMENDATIONS
+--------------------
+• Review data quality before analysis
+• Consider data preprocessing steps

@@ -50,7 +50,7 @@ class InteractivePlots:
         self.df = None
         self.plots = {}
         
-    def load_data(self):
+    def load_data(self, table_name: str = None):
         """Load data from CSV file or database."""
         print(f"[DATA] Loading data from: {self.data_source}")
         
@@ -60,16 +60,26 @@ class InteractivePlots:
             else:
                 # Assume it's a database file
                 conn = sqlite3.connect(self.data_source)
-                # Get first table
+                # Get table
                 cursor = conn.cursor()
                 cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
                 tables = cursor.fetchall()
-                if tables:
-                    first_table = tables[0][0]
-                    self.df = pd.read_sql_query(f"SELECT * FROM {first_table}", conn)
-                    print(f"[INFO] Loaded table: {first_table}")
+                
+                if table_name:
+                    # Use specified table
+                    if table_name in [t[0] for t in tables]:
+                        self.df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
+                        print(f"[INFO] Loaded table: {table_name}")
+                    else:
+                        raise ValueError(f"Table '{table_name}' not found. Available tables: {[t[0] for t in tables]}")
                 else:
-                    raise ValueError("No tables found in database")
+                    # Use first table
+                    if tables:
+                        first_table = tables[0][0]
+                        self.df = pd.read_sql_query(f"SELECT * FROM {first_table}", conn)
+                        print(f"[INFO] Loaded table: {first_table}")
+                    else:
+                        raise ValueError("No tables found in database")
                 conn.close()
             
             print(f"[OK] Loaded dataset: {len(self.df)} rows, {len(self.df.columns)} columns")
@@ -478,12 +488,12 @@ class InteractivePlots:
         
         return heatmap
     
-    def run_comprehensive_analysis(self):
+    def run_comprehensive_analysis(self, table_name: str = None):
         """Run comprehensive interactive analysis."""
         print(f"\n[START] Starting comprehensive interactive analysis")
         
         # Load data
-        data = self.load_data()
+        data = self.load_data(table_name)
         if data is None:
             return
         
@@ -516,6 +526,7 @@ def main():
     
     parser = argparse.ArgumentParser(description='Generate interactive-style visualizations')
     parser.add_argument('data_source', help='Path to CSV file or database file')
+    parser.add_argument('--table', help='Table name to use (for database files)')
     
     args = parser.parse_args()
     
@@ -524,7 +535,7 @@ def main():
     
     try:
         # Run comprehensive analysis
-        generator.run_comprehensive_analysis()
+        generator.run_comprehensive_analysis(table_name=args.table)
         
     except Exception as e:
         print(f"[ERROR] Error during analysis: {e}")
